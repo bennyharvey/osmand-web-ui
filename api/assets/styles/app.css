@@ -1,0 +1,5 @@
+@import "~bootstrap";
+@import "~leaflet";
+body {
+    background-color: white;
+}
