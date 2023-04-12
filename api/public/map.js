@@ -69,6 +69,7 @@ const highlightTrack = (e) => {
   setTracksStyle(dimmedTracksStyle)
   e.style['color'] = '#3399FF'
   tracks[e.dataset.name].layer.setStyle(highlightedTrackStyle)
+  tracks[e.dataset.name].layer.bringToFront()
   map.fitBounds(tracks[e.dataset.name].layer.getBounds())
   activeTrackElement = e
 
@@ -112,7 +113,7 @@ const handlePointClick = (e) => {
 
 const registerPointClickHandlers = () => {
   document.querySelectorAll('.point-list-item').forEach((e) => {
-    e.addEventListener('click', (e) => handlePointClick(e))
+    e.addEventListener('mouseenter', (e) => handlePointClick(e))
   });
 }
 
@@ -120,4 +121,23 @@ document.querySelectorAll('.track-list-item').forEach((e) => {
   e.addEventListener('click', (e) => highlightTrack(e.target))
 });
 
+let dotsLayer = new Leaflet.LayerGroup()
+const handleTracksTabSwitch = (e) => {
+  if (map.hasLayer(dotsLayer)) {
+    map.removeLayer(dotsLayer)
+  }
+  dotsLayer = new Leaflet.LayerGroup()
+}
+const handleTrackPointsTabSwitch = (e) => {
+  if (activeTrackElement === null) {
+    return
+  }
+  tracks[activeTrackElement.dataset.name].layer.getLatLngs().map((latlngs) => {
+    let dot = new Leaflet.Circle(latlngs, {radius: 1}).addTo(dotsLayer)
+  })
+  dotsLayer.addTo(map)
+}
+
+document.getElementById("tracks-tab").addEventListener('click', (e) => handleTracksTabSwitch(e))
+document.getElementById("track-points-tab").addEventListener('click', (e) => handleTrackPointsTabSwitch(e))
 }
