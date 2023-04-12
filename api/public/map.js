@@ -38,33 +38,41 @@ const highlightedTrackStyle = {
   opacity: 1
 }
 
-let polylines = {};
-for (let file of geoData.files){
-  let trackLayer = [];
-  for (let track of file.tracks){
-    for (let segment of track.trkseg){
+let tracks = {};
+for (let file of geoData.files) {
+  let trackLayer = []
+  let points = []
+  for (let track of file.tracks) {
+    for (let segment of track.trkseg) {
       for (let point of segment.points) {
         trackLayer.push([point.lat, point.lon])
+        points.push(point)
       }
     }
   }
-  polylines[file.metadata.name] = L.polyline(trackLayer, defaultTracksStyle).addTo(map);
+  tracks[file.metadata.name] = {
+    layer: L.polyline(trackLayer, defaultTracksStyle).addTo(map),
+    points: points
+  }
 }
 
-let activeTrack = null
+
+let activeTrackElement = null
 
 const highlightTrack = (e) => {
   resetTrackButtons()
-  if (activeTrack === e) {
+  renderTrackPointsToTab(e)
+  if (activeTrackElement === e) {
     setTracksStyle(defaultTracksStyle)
-    activeTrack = null
+    activeTrackElement = null
     return
   }
   setTracksStyle(dimmedTracksStyle)
   e.style['color'] = '#3399FF'
-  polylines[e.dataset.name].setStyle(highlightedTrackStyle)
-  map.fitBounds(polylines[e.dataset.name].getBounds())
-  activeTrack = e
+  tracks[e.dataset.name].layer.setStyle(highlightedTrackStyle)
+  map.fitBounds(tracks[e.dataset.name].layer.getBounds())
+  activeTrackElement = e
+
 }
 
 const resetTrackButtons = () => {
@@ -74,9 +82,21 @@ const resetTrackButtons = () => {
 }
 
 const setTracksStyle = (style) => {
-  for (let polyline in polylines) {
-    polylines[polyline].setStyle(style)
+  for (let polyline in tracks) {
+    tracks[polyline].layer.setStyle(style)
   }
+}
+
+const renderTrackPointsToTab = (e) => {
+  let tab = document.getElementById('track-points-tab-content')
+  tab.innerHTML = ''
+  tracks[e.dataset.name].points.map((point) => {
+    let pointElement = document.createElement("li")
+    pointElement.innerHTML = point.time
+    tab.appendChild(pointElement)
+  })
+
+
 }
 
 document.querySelectorAll('.track-list-item').forEach((e) => {
