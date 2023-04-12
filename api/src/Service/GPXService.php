@@ -20,10 +20,21 @@ use phpGPX\phpGPX;
 
 class GPXService
 {
-    public function deletePoint(string $path, LatLng $coords): GpxFile
+    public function __construct(
+        private readonly string $tracksDir,
+        private readonly string $backupsDir,
+    ) {
+    }
+
+    /**
+     * @throws DOMException
+     */
+    public function deletePoint(string $trackName, LatLng $coords): GpxFile
     {
-        phpGPX::$DATETIME_FORMAT = 'p';
+        $path = "$this->tracksDir/$trackName.gpx";
         $file = phpGPX::load($path);
+        $date = date('YmdHis');
+        $file->save("$this->backupsDir/$trackName.backup.$date.gpx", phpGPX::XML_FORMAT);
         $newFile = new GpxFile();
         $newFile->metadata = $file->metadata;
         $newFile->creator = $file->creator;
@@ -57,15 +68,10 @@ class GPXService
         }
 
         $xml = $this->toXML($newFile);
-        $xml->save($path . '-new');
+        $xml->save($path);
         return $newFile;
     }
 
-    public function pointsEqual(Point $point1, Point $point2): bool
-    {
-        return true;
-        //$point1->toArray()
-    }
     /**
      * @throws DOMException
      */
