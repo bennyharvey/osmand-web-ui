@@ -7,7 +7,6 @@ use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,11 +19,9 @@ use Symfony\Contracts\Cache\ItemInterface;
 final class MapController extends AbstractController
 {
     public function __construct(
-        private LoggerInterface $logger,
-        private ParameterBagInterface $params,
-        private CacheInterface $cache
-    )
-    {
+        private readonly ParameterBagInterface $params,
+        private readonly CacheInterface        $cache
+    ) {
     }
 
     const STATUS_OK = 'ok';

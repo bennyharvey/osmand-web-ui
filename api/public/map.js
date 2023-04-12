@@ -20,20 +20,6 @@ const mapElement = document.querySelector('#map');
 const geoData = JSON.parse(mapElement.dataset.geoData);
 console.log(geoData)
 
-let polylines = {};
-for (let file of geoData.files){
-  let trackLayer = [];
-  for (let track of file.tracks){
-    for (let segment of track.trkseg){
-      for (let point of segment.points) {
-        trackLayer.push([point.lat, point.lon])
-      }
-    }
-  }
-  polylines[file.metadata.name] = L.polyline(trackLayer, defaultTracksStyle).addTo(map);
-}
-
-
 const defaultTracksStyle = {
   color: 'red',
   weight: 2,
@@ -52,17 +38,29 @@ const highlightedTrackStyle = {
   opacity: 1
 }
 
+let polylines = {};
+for (let file of geoData.files){
+  let trackLayer = [];
+  for (let track of file.tracks){
+    for (let segment of track.trkseg){
+      for (let point of segment.points) {
+        trackLayer.push([point.lat, point.lon])
+      }
+    }
+  }
+  polylines[file.metadata.name] = L.polyline(trackLayer, defaultTracksStyle).addTo(map);
+}
 
 let activeTrack = null
 
 const highlightTrack = (e) => {
+  resetTrackButtons()
   if (activeTrack === e) {
     setTracksStyle(defaultTracksStyle)
     activeTrack = null
     return
   }
   setTracksStyle(dimmedTracksStyle)
-  resetTrackButtons()
   e.style['color'] = '#3399FF'
   polylines[e.dataset.name].setStyle(highlightedTrackStyle)
   map.fitBounds(polylines[e.dataset.name].getBounds())

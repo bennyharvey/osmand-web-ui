@@ -12,9 +12,24 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-xl-2">
-                {% for file in geoData.files %}
-                    <li class="track-list-item" data-name="{{ file.metadata.name }}">{{ file.metadata.name|e }}</li>
-                {% endfor %}
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="tracks-tab" data-bs-toggle="tab" data-bs-target="#tracks" type="button" role="tab" aria-controls="tracks" aria-selected="true">Tracks</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="track-points-tab" data-bs-toggle="tab" data-bs-target="#track-points" type="button" role="tab" aria-controls="track-points" aria-selected="false">Points</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="myTabContent">
+                    <div class="tab-pane fade show active" id="tracks" role="tabpanel" aria-labelledby="tracks-tab">
+                        {% for file in geoData.files %}
+                            <li class="track-list-item" data-name="{{ file.metadata.name }}">{{ file.metadata.name|e }}</li>
+                        {% endfor %}
+                    </div>
+                    <div class="tab-pane fade" id="track-points" role="tabpanel" aria-labelledby="track-points-tab">
+                        Select track to explore its points
+                    </div>
+                </div>
             </div>
             <div class="col-xl-10">
                 <div id="map" style="height: 90vh; width: 100%; outline: none" data-geo-data="{{ geoData|json_encode }}"></div>
