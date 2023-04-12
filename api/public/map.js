@@ -5,7 +5,8 @@ let mapbox = new Leaflet.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y
   attribution: ''
 })
 
-let map = new Leaflet.Map('map', {
+const mapElement = document.querySelector('#map');
+let map = new Leaflet.Map(mapElement, {
   center: [55.78976742274183, 49.139635562896736],
   zoom: 14,
   zoomControl: false,
@@ -15,8 +16,6 @@ let map = new Leaflet.Map('map', {
   attributionControl: false,
 
 });
-
-const mapElement = document.querySelector('#map');
 const geoData = JSON.parse(mapElement.dataset.geoData);
 console.log(geoData)
 
@@ -82,8 +81,8 @@ const resetTrackButtons = () => {
 }
 
 const setTracksStyle = (style) => {
-  for (let polyline in tracks) {
-    tracks[polyline].layer.setStyle(style)
+  for (let trackId in tracks) {
+    tracks[trackId].layer.setStyle(style)
   }
 }
 
@@ -92,11 +91,29 @@ const renderTrackPointsToTab = (e) => {
   tab.innerHTML = ''
   tracks[e.dataset.name].points.map((point) => {
     let pointElement = document.createElement("li")
+    pointElement.className = 'point-list-item'
     pointElement.innerHTML = point.time
+    pointElement.dataset.lat = point.lat
+    pointElement.dataset.lon = point.lon
     tab.appendChild(pointElement)
   })
+  registerPointClickHandlers()
+}
 
+let activePointCircle = new Leaflet.Layer()
+const handlePointClick = (e) => {
+  if (map.hasLayer(activePointCircle)) {
+    activePointCircle.removeFrom(map)
+  }
+  let coords = [e.target.dataset.lat, e.target.dataset.lon]
+  map.panTo(coords)
+  activePointCircle = new Leaflet.CircleMarker(coords, {radius: 20}).addTo(map)
+}
 
+const registerPointClickHandlers = () => {
+  document.querySelectorAll('.point-list-item').forEach((e) => {
+    e.addEventListener('click', (e) => handlePointClick(e))
+  });
 }
 
 document.querySelectorAll('.track-list-item').forEach((e) => {
