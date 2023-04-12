@@ -18,10 +18,9 @@ let map = new Leaflet.Map('map', {
 
 const mapElement = document.querySelector('#map');
 const geoData = JSON.parse(mapElement.dataset.geoData);
-
-
 console.log(geoData)
 
+let polylines = {};
 for (let file of geoData.files){
   let trackLayer = [];
   for (let track of file.tracks){
@@ -31,8 +30,59 @@ for (let file of geoData.files){
       }
     }
   }
-  let polyline = L.polyline(trackLayer, {color: 'red'}).addTo(map);
+  polylines[file.metadata.name] = L.polyline(trackLayer, defaultTracksStyle).addTo(map);
 }
 
+
+const defaultTracksStyle = {
+  color: 'red',
+  weight: 2,
+  opacity: 1
+}
+
+const dimmedTracksStyle = {
+  color: 'red',
+  weight: 2,
+  opacity: 0.2
+}
+
+const highlightedTrackStyle = {
+  color: 'black',
+  weight: 3,
+  opacity: 1
+}
+
+
+let activeTrack = null
+
+const highlightTrack = (e) => {
+  if (activeTrack === e) {
+    setTracksStyle(defaultTracksStyle)
+    activeTrack = null
+    return
+  }
+  setTracksStyle(dimmedTracksStyle)
+  resetTrackButtons()
+  e.style['color'] = '#3399FF'
+  polylines[e.dataset.name].setStyle(highlightedTrackStyle)
+  map.fitBounds(polylines[e.dataset.name].getBounds())
+  activeTrack = e
+}
+
+const resetTrackButtons = () => {
+  document.querySelectorAll('.track-list-item').forEach((e) => {
+    e.style['color'] = 'black'
+  });
+}
+
+const setTracksStyle = (style) => {
+  for (let polyline in polylines) {
+    polylines[polyline].setStyle(style)
+  }
+}
+
+document.querySelectorAll('.track-list-item').forEach((e) => {
+  e.addEventListener('click', (e) => highlightTrack(e.target))
+});
 
 }

@@ -54,10 +54,10 @@ final class MapController extends AbstractController
         if (!$finder->hasResults()) {
             throw new \RuntimeException('no tracks found in' . $tracksDir);
         }
+        $finder->sortByName();
         foreach ($finder as $file) {
             $geoData['files'][] = $this->getFile($file->getRealPath());
         }
-
         return $this->render('map.html.twig', [
             'geoData' => $geoData
         ]);

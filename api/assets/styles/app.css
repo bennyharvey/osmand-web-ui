@@ -3,3 +3,9 @@
 body {
     background-color: white;
 }
+.track-list-item{
+    cursor: pointer;
+}
+.track-list-item:hover{
+    color: #0a58ca;
+}
