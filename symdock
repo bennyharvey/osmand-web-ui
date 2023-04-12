@@ -1,0 +1,177 @@
+#!/bin/bash
+
+DOCKER_COMPOSE=()
+if ! docker compose &> /dev/null; then
+    DOCKER_COMPOSE=(docker-compose)
+else
+    DOCKER_COMPOSE=(docker compose)
+fi
+
+ARGS=()
+APP_SERVICE="php"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;36m'
+NC='\033[0m'
+
+show_help() {
+    echo -e "Helper script for use with ${GREEN}symfony${NC} + ${GREEN}docker compose${NC}."
+    echo
+    echo -e "Syntax: $(basename "$0") [${BLUE}-h${NC}] [${BLUE}argument${NC}]"
+    echo
+    echo -e "Options:"
+    echo -e "  ${BLUE}-h${NC}           Print this Help."
+    echo
+    echo -e "Arguments:"
+    echo -e "  ${BLUE}start${NC}        Start all containers in detached dev mode."
+    echo -e "  ${BLUE}start-prod${NC}   Start all containers in detached production mode."
+    echo -e "  ${BLUE}update-prod${NC}  Rebuild and start all containers in detached production mode."
+    echo -e "  ${BLUE}stop${NC}         Stop all containers, including orphans."
+    echo -e "  ${BLUE}up${NC}           Proxy following arguments to ${GREEN}${DOCKER_COMPOSE[*]} up -d${NC} command."
+    echo -e "  ${BLUE}down${NC}         Proxy following arguments to ${GREEN}${DOCKER_COMPOSE[*]} down${NC} command."
+    echo -e "  ${BLUE}ps${NC}           Proxy following arguments to ${GREEN}${DOCKER_COMPOSE[*]} ps${NC} command."
+    echo -e "  ${BLUE}logs${NC}         Proxy following arguments to ${GREEN}${DOCKER_COMPOSE[*]} logs${NC} command."
+    echo -e "  ${BLUE}migrate${NC}      Proxy following arguments to ${GREEN}bin/console doctrine:migrations:migrate${NC} command inside php container."
+    echo -e "  ${BLUE}ash${NC}          Attach current shell to php container."
+    echo -e "  ${BLUE}console${NC}      Proxy following arguments to ${GREEN}bin/console${NC} command inside php container."
+    echo -e "  ${BLUE}phpunit${NC}      Proxy following arguments to ${GREEN}bin/phpunit${NC} command inside php container."
+    echo -e "  ${BLUE}composer${NC}     Proxy following arguments to ${GREEN}composer${NC} command inside php container."
+    echo -e "  ${BLUE}require${NC}      Proxy following arguments to ${GREEN}composer require${NC} command inside php container."
+    echo -e "  ${BLUE}restart${NC}      Stop and start all containers."
+    echo -e "  ${BLUE}rebuild${NC}      Rebuild all containers."
+    echo
+}
+
+show_usage() {
+    echo "Usage: $(basename "$0") [-h] [argument]"
+}
+
+stop_containers() {
+    "${DOCKER_COMPOSE[@]}" down --remove-orphans
+}
+
+start_containers_detached() {
+    "${DOCKER_COMPOSE[@]}" up -d
+}
+
+start_production_containers_detached() {
+    "${DOCKER_COMPOSE[@]}" -f docker-compose.yml -f docker-compose.prod.yml up -d
+}
+
+restart() {
+    stop_containers
+    start_containers_detached
+}
+
+check_if_stdin_is_a_terminal() {
+    [ ! -t 0 ] && ARGS+=(-T)
+}
+
+check_dev_environment() {
+    source api/.env
+    if [ "$APP_ENV" == "prod" ]; then
+        echo -e "${RED}This command should not be used in production environment${NC}"
+        exit 1
+    fi
+}
+
+show_unsafe_alert() {
+    read -p "$1, are you sure? (y/n): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Nn]$ ]]
+    then
+        exit 126
+    fi
+}
+
+while getopts ":h" option; do
+    case $option in
+        h)
+            show_help
+            exit;;
+        *)
+            show_usage
+            exit 1;;
+    esac
+done
+
+if [ "$1" == "" ]; then
+    show_usage
+    exit 1
+elif [ "$1" == "start" ]; then
+    start_containers_detached
+    exit 0
+elif [ "$1" == "start-prod" ]; then
+    start_production_containers_detached
+    exit 0
+elif [ "$1" == "update-prod" ]; then
+    shift 1
+    ARGS+=(-f docker-compose.yml -f docker-compose.prod.yml up -d --build "$@")
+elif [ "$1" == "stop" ]; then
+    stop_containers
+    exit 0
+elif [ "$1" == "up" ]; then
+    shift 1
+    ARGS+=(up -d "$@")
+elif [ "$1" == "down" ]; then
+    shift 1
+    ARGS+=(down "$@")
+elif [ "$1" == "ps" ]; then
+    shift 1
+    ARGS+=(ps "$@")
+elif [ "$1" == "logs" ]; then
+    shift 1
+    ARGS+=(logs "$@")
+elif [ "$1" == "migrate" ]; then
+    shift 1
+    ARGS+=(exec)
+    check_if_stdin_is_a_terminal
+    ARGS+=("$APP_SERVICE" php bin/console doctrine:migrations:migrate "$@")
+elif [ "$1" == "ash" ]; then
+    shift 1
+    ARGS+=(exec)
+    check_if_stdin_is_a_terminal
+    ARGS+=("$APP_SERVICE" sh)
+elif [ "$1" = "console" ]; then
+    shift 1
+    ARGS+=(exec)
+    check_if_stdin_is_a_terminal
+    ARGS+=("$APP_SERVICE" php bin/console "$@")
+elif [ "$1" = "phpunit" ]; then
+    shift 1
+    ARGS+=(exec)
+    check_if_stdin_is_a_terminal
+    ARGS+=("$APP_SERVICE" php bin/phpunit "$@")
+elif [ "$1" = "composer" ]; then
+    shift 1
+    ARGS+=(exec)
+    check_if_stdin_is_a_terminal
+    ARGS+=("$APP_SERVICE" composer "$@")
+elif [ "$1" = "php" ]; then
+    shift 1
+    ARGS+=(exec)
+    check_if_stdin_is_a_terminal
+    ARGS+=("$APP_SERVICE" "$@")
+elif [ "$1" = "require" ]; then
+    shift 1
+    ARGS+=(exec)
+    check_if_stdin_is_a_terminal
+    ARGS+=("$APP_SERVICE" composer require "$@")
+elif [ "$1" == "restart" ]; then
+    restart
+    exit 0
+elif [ "$1" == "rebuild" ]; then
+    check_dev_environment
+    show_unsafe_alert "This will rebuild all containers"
+    stop_containers
+    shift 1
+    ARGS+=(up -d --build "$@")
+else
+    show_usage
+    exit 1
+fi
+
+
+
+"${DOCKER_COMPOSE[@]}" "${ARGS[@]}"
