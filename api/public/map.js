@@ -14,7 +14,6 @@ let map = new Leaflet.Map(mapElement, {
   cursor: 'pointer',
   layers: [mapbox],
   attributionControl: false,
-
 });
 const geoData = JSON.parse(mapElement.dataset.geoData);
 console.log(geoData)
@@ -28,7 +27,7 @@ const defaultTracksStyle = {
 const dimmedTracksStyle = {
   color: 'red',
   weight: 2,
-  opacity: 0.2
+  opacity: 0.4
 }
 
 const highlightedTrackStyle = {
@@ -117,9 +116,6 @@ const registerPointClickHandlers = () => {
   });
 }
 
-document.querySelectorAll('.track-list-item').forEach((e) => {
-  e.addEventListener('click', (e) => highlightTrack(e.target))
-});
 
 let dotsLayer = new Leaflet.LayerGroup()
 const handleTracksTabSwitch = (e) => {
@@ -128,16 +124,40 @@ const handleTracksTabSwitch = (e) => {
   }
   dotsLayer = new Leaflet.LayerGroup()
 }
+
 const handleTrackPointsTabSwitch = (e) => {
   if (activeTrackElement === null) {
     return
   }
-  tracks[activeTrackElement.dataset.name].layer.getLatLngs().map((latlngs) => {
-    let dot = new Leaflet.Circle(latlngs, {radius: 1}).addTo(dotsLayer)
+  tracks[activeTrackElement.dataset.name].layer.getLatLngs().map((point) => {
+    let dot = new Leaflet.Circle(point, {radius: 2}).addTo(dotsLayer)
+    bindPointEditingHandlers(point, dot)
   })
   dotsLayer.addTo(map)
 }
 
+const bindPointEditingHandlers = (point, marker) => {
+  marker.on('mousedown', (e) => {
+    map.dragging.disable()
+    map.on('mousemove', (me) => {
+      let mouseCoords = map.mouseEventToLatLng(me.originalEvent)
+      e.target.setLatLng(mouseCoords)
+      point.lat = mouseCoords.lat
+      point.lng = mouseCoords.lng
+      tracks[activeTrackElement.dataset.name].layer.redraw()
+    })
+  })
+  map.on('mouseup', (e) => {
+    map.dragging.enable()
+    map.off('mousemove')
+  })
+}
+
 document.getElementById("tracks-tab").addEventListener('click', (e) => handleTracksTabSwitch(e))
 document.getElementById("track-points-tab").addEventListener('click', (e) => handleTrackPointsTabSwitch(e))
+document.querySelectorAll('.track-list-item').forEach((e) => {
+  e.addEventListener('click', (e) => highlightTrack(e.target))
+});
+
+
 }
