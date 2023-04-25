@@ -101,7 +101,7 @@ const renderTrackPointsToTab = (e) => {
 }
 
 let activePointCircle = new Leaflet.Layer()
-const handlePointClick = (e) => {
+const handlePointListItemHover = (e) => {
   if (map.hasLayer(activePointCircle)) {
     activePointCircle.removeFrom(map)
   }
@@ -112,7 +112,7 @@ const handlePointClick = (e) => {
 
 const registerPointClickHandlers = () => {
   document.querySelectorAll('.point-list-item').forEach((e) => {
-    e.addEventListener('mouseenter', (e) => handlePointClick(e))
+    e.addEventListener('mouseenter', (e) => handlePointListItemHover(e))
   });
 }
 

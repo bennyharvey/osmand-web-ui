@@ -87,7 +87,7 @@ final class MapController extends AbstractController
     private function getFile(string $path): array
     {
         return $this->cache->get(basename($path), function (ItemInterface $item) use ($path) {
-            $item->expiresAfter(1);
+            $item->expiresAfter(60);
             return phpGPX::load($path)->toArray();
         });
     }
