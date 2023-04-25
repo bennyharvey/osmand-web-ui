@@ -9,19 +9,44 @@
 {% block title %}Map{% endblock %}
 
 {% block page_contents %}
-    <div class="container-fluid">
+    <div class="container-fluid" data-controller="map">
         <div class="row">
             <div class="col-xl-2">
                 <ul class="nav nav-tabs" id="myTab" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="tracks-tab" data-bs-toggle="tab" data-bs-target="#tracks-tab-content" type="button" role="tab" aria-controls="tracks" aria-selected="true">Tracks</button>
+                        <button
+                            class="nav-link active"
+                            id="tracks-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#tracks-tab-content"
+                            type="button"
+                            role="tab"
+                            aria-controls="tracks"
+                            aria-selected="true"
+                            data-action="click->map#switchToTracksView"
+                        >
+                            Tracks
+                        </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="track-points-tab" data-bs-toggle="tab" data-bs-target="#track-points-tab-content" type="button" role="tab" aria-controls="track-points" aria-selected="false">Points</button>
+                        <button
+                            class="nav-link"
+                            id="track-points-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#track-points-tab-content"
+                            type="button"
+                            role="tab"
+                            aria-controls="track-points"
+                            aria-selected="false"
+                            data-action="click->map#switchToTrackPointsView"
+                        >
+                            Points
+                        </button>
                     </li>
                 </ul>
                 <div class="tab-content" id="myTabContent" style="height: 85vh; overflow: auto;">
                     <div class="tab-pane fade show active" id="tracks-tab-content" role="tabpanel" aria-labelledby="tracks-tab">
+                        <span data-map-target="count">asdasd</span>
                         {% for file in geoData.files %}
                             <li class="track-list-item" data-name="{{ file.metadata.name }}">{{ file.metadata.name|e }}</li>
                         {% endfor %}
