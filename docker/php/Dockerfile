@@ -60,13 +60,13 @@ ENV PATH="${PATH}:/root/.composer/vendor/bin"
 COPY --from=composer/composer:2-bin --link /composer /usr/bin/composer
 
 # prevent the reinstallation of vendors at every changes in the source code
-COPY composer.* symfony.* ./
+COPY ./app/composer.* ./app/symfony.* ./
 RUN set -eux; \
 	composer install --prefer-dist --no-dev --no-autoloader --no-scripts --no-progress; \
 	composer clear-cache
 
 # copy sources
-COPY --link . .
+COPY --link ./app .
 RUN rm -Rf docker/
 
 RUN set -eux; \
@@ -92,19 +92,3 @@ RUN set -eux; \
 	install-php-extensions xdebug
 
 RUN rm -f .env.local.php
-
-# Build Caddy with the Mercure and Vulcain modules
-FROM caddy:2-builder-alpine AS app_caddy_builder
-
-RUN xcaddy build \
-	--with github.com/dunglas/mercure/caddy \
-	--with github.com/dunglas/vulcain/caddy
-
-# Caddy image
-FROM caddy:2-alpine AS app_caddy
-
-WORKDIR /srv/app
-
-COPY --from=app_caddy_builder --link /usr/bin/caddy /usr/bin/caddy
-COPY --from=app_php --link /srv/app/public public/
-COPY --link docker/caddy/Caddyfile /etc/caddy/Caddyfile

@@ -6,12 +6,9 @@ services:
     build:
       target: app_php_dev
     volumes:
-      - ./api:/srv/app
-      - ./api/docker/php/conf.d/app.dev.ini:/usr/local/etc/php/conf.d/app.dev.ini:ro
-      - ./api/var:/srv/app/var
-      # If you develop on Mac or Windows you can remove the vendor/ directory 
-      #  from the bind-mount for better performance by enabling the next line:
-      #- /srv/app/vendor
+      - ./app:/srv/app
+      - ./docker/php/conf.d/app.dev.ini:/usr/local/etc/php/conf.d/app.dev.ini:ro
+      - ./app/var:/srv/app/var
     environment:
       # See https://xdebug.org/docs/all_settings#mode 
       XDEBUG_MODE: "${XDEBUG_MODE:-off}"
@@ -31,12 +28,6 @@ services:
 #      # On Linux, you may want to comment the following line for improved performance
 #      WATCHPACK_POLLING: true
 
-#  caddy:
-#    volumes:
-#      - ./api/public:/srv/app/public:ro
-#      - ./api/docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-#    environment:
-#      MERCURE_EXTRA_DIRECTIVES: demo
 
 ###> doctrine/doctrine-bundle ###
   database:
@@ -45,6 +36,3 @@ services:
         published: ${DB_PUBLISHED_PORT:-5432}
         protocol: tcp
 ###< doctrine/doctrine-bundle ###
-
-###> symfony/mercure-bundle ###
-###< symfony/mercure-bundle ###
